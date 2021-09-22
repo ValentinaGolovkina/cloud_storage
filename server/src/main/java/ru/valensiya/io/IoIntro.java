@@ -1,4 +1,4 @@
-package ru.valensiya.storage;
+package ru.valensiya.io;
 
 import java.io.*;
 

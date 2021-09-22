@@ -1,4 +1,4 @@
-package ru.valensiya.storage;
+package ru.valensiya.nio;
 
 import javafx.application.Application;
 import javafx.fxml.FXMLLoader;
