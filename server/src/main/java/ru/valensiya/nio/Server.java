@@ -1,5 +1,6 @@
 package ru.valensiya.nio;
 
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -10,6 +11,9 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.Set;
@@ -20,6 +24,7 @@ public class Server {
     private ServerSocketChannel serverChannel;
     private Selector selector;
     private ByteBuffer buffer;
+    private Path rootPath;
 
     public Server() throws IOException {
 
@@ -30,6 +35,7 @@ public class Server {
         serverChannel.configureBlocking(false);
         serverChannel.register(selector, SelectionKey.OP_ACCEPT);
         log.debug("Server started...");
+        rootPath = Paths.get("server", "root");
 
         while (serverChannel.isOpen()) {
 
@@ -70,7 +76,6 @@ public class Server {
             }
             read = channel.read(buffer);
             if (read == 0) {
-                log.debug("read == 0.." );
                 break;
             }
             buffer.flip();
@@ -81,7 +86,24 @@ public class Server {
         }
         String message = msg.toString();
         log.debug("message.." + message);
-        channel.write(ByteBuffer.wrap(("[" + LocalDateTime.now() + "] " + message).getBytes(StandardCharsets.UTF_8)));
+        if (message.startsWith("ls")) {
+            log.debug("ls");
+            ls(channel);
+        } else if (message.startsWith("cat ")) {
+            channel.write(ByteBuffer.wrap(("[" + LocalDateTime.now() + "] " + message).getBytes(StandardCharsets.UTF_8)));
+        }
+    }
+
+    @SneakyThrows
+    private void ls(SocketChannel channel) {
+        channel.write(ByteBuffer.wrap(("[" + LocalDateTime.now() + "] ").getBytes(StandardCharsets.UTF_8)));
+        Files.walk(rootPath).forEach(path -> {
+            try {
+                channel.write(ByteBuffer.wrap((path.toString()+"\n").getBytes(StandardCharsets.UTF_8)));
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        });
     }
 
     private void handleAccept(SelectionKey key) throws IOException {
