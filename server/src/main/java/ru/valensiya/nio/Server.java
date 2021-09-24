@@ -14,6 +14,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.Set;
@@ -86,25 +87,49 @@ public class Server {
         }
         String message = msg.toString();
         log.debug("message.." + message);
-        if (message.startsWith("ls")) {
+        doCommand(message, channel);
+    }
+
+    private void doCommand(String message, SocketChannel channel) {
+        String[] s =  message.split(" ");
+        if (s.length==1 && s[0].equals("ls\r\n")) {
             log.debug("ls");
             ls(channel);
-        } else if (message.startsWith("cat ")) {
-            channel.write(ByteBuffer.wrap(("[" + LocalDateTime.now() + "] " + message).getBytes(StandardCharsets.UTF_8)));
+        } else if (s.length==2 && s[0].equals("cat")) {
+            sendMsg(message, channel);
+            cat(s[1], channel);
+        } else {
+            sendMsg("ERROR command does not exist", channel);
         }
     }
 
     @SneakyThrows
     private void ls(SocketChannel channel) {
-        channel.write(ByteBuffer.wrap(("[" + LocalDateTime.now() + "] ").getBytes(StandardCharsets.UTF_8)));
+        channel.write(ByteBuffer.wrap(("[" + LocalDateTime.now() + "]\r\n").getBytes(StandardCharsets.UTF_8)));
         Files.walk(rootPath).forEach(path -> {
             try {
-                channel.write(ByteBuffer.wrap((path.toString()+"\n").getBytes(StandardCharsets.UTF_8)));
+                channel.write(ByteBuffer.wrap((path.toString()+"\r\n").getBytes(StandardCharsets.UTF_8)));
             } catch (IOException e) {
                 e.printStackTrace();
             }
         });
     }
+
+    @SneakyThrows
+    private void cat(String s, SocketChannel channel) {
+        Path copy = Paths.get("server", "root", s);
+        if (Files.exists(copy)) {
+            Files.readAllLines(copy).forEach(line->sendMsg(line, channel));
+        } else {
+            sendMsg("file not found", channel);
+        }
+    }
+
+    @SneakyThrows
+    private void sendMsg(String msg, SocketChannel channel) {
+        channel.write(ByteBuffer.wrap(("[" + LocalDateTime.now() + "]" + msg + "\r\n").getBytes(StandardCharsets.UTF_8)));
+    }
+
 
     private void handleAccept(SelectionKey key) throws IOException {
         SocketChannel channel = serverChannel.accept();
