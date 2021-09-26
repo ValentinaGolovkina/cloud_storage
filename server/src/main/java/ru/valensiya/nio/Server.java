@@ -18,6 +18,7 @@ import java.nio.file.StandardOpenOption;
 import java.time.LocalDateTime;
 import java.util.Iterator;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Slf4j
 public class Server {
@@ -25,9 +26,9 @@ public class Server {
     private ServerSocketChannel serverChannel;
     private Selector selector;
     private ByteBuffer buffer;
-    private Path rootPath;
+    private static Path ROOT = Paths.get("server", "root");
 
-    public Server() throws IOException {
+    public Server() throws Exception {
 
         buffer = ByteBuffer.allocate(256);
         serverChannel = ServerSocketChannel.open();
@@ -36,7 +37,6 @@ public class Server {
         serverChannel.configureBlocking(false);
         serverChannel.register(selector, SelectionKey.OP_ACCEPT);
         log.debug("Server started...");
-        rootPath = Paths.get("server", "root");
 
         while (serverChannel.isOpen()) {
 
@@ -51,7 +51,6 @@ public class Server {
                     handleAccept(key);
                 }
                 if (key.isReadable()) {
-                    log.debug("isReadable..");
                     handleRead(key);
                 }
                 iterator.remove();
@@ -59,11 +58,11 @@ public class Server {
         }
     }
 
-    public static void main(String[] args) throws IOException {
+    public static void main(String[] args) throws Exception {
         new Server();
     }
 
-    private void handleRead(SelectionKey key) throws IOException {
+    private void handleRead(SelectionKey key) throws Exception {
         SocketChannel channel = (SocketChannel) key.channel();
 
         buffer.clear();
@@ -71,7 +70,7 @@ public class Server {
         StringBuilder msg = new StringBuilder();
         while (true) {
             if (read == -1) {
-                log.debug("read == 1.." );
+                log.debug("read == -1" );
                 channel.close();
                 return;
             }
@@ -85,51 +84,43 @@ public class Server {
             }
             buffer.clear();
         }
-        String message = msg.toString();
-        log.debug("message.." + message);
-        doCommand(message, channel);
-    }
-
-    private void doCommand(String message, SocketChannel channel) {
-        String[] s =  message.split(" ");
-        if (s.length==1 && s[0].equals("ls\r\n")) {
-            log.debug("ls");
-            ls(channel);
-        } else if (s.length==2 && s[0].equals("cat")) {
-            sendMsg(message, channel);
-            cat(s[1], channel);
-        } else {
-            sendMsg("ERROR command does not exist", channel);
-        }
-    }
-
-    @SneakyThrows
-    private void ls(SocketChannel channel) {
-        channel.write(ByteBuffer.wrap(("[" + LocalDateTime.now() + "]\r\n").getBytes(StandardCharsets.UTF_8)));
-        Files.walk(rootPath).forEach(path -> {
+        String message = msg.toString().trim();
+        log.debug("received message:" + message);
+        if (message.equals("ls")) {
+            channel.write(ByteBuffer.wrap(getFilesInfo().getBytes(StandardCharsets.UTF_8)));
+        } else if (message.startsWith("cat")) {
             try {
-                channel.write(ByteBuffer.wrap((path.toString()+"\r\n").getBytes(StandardCharsets.UTF_8)));
-            } catch (IOException e) {
-                e.printStackTrace();
+                String fileName = message.split(" ")[1];
+                channel.write(ByteBuffer.wrap(getFileDataAsString(fileName).getBytes(StandardCharsets.UTF_8)));
+            } catch (Exception e) {
+                channel.write(ByteBuffer.wrap("Command cat should be have only two args\r\n".getBytes(StandardCharsets.UTF_8)));
             }
-        });
-    }
-
-    @SneakyThrows
-    private void cat(String s, SocketChannel channel) {
-        Path copy = Paths.get("server", "root", s);
-        if (Files.exists(copy)) {
-            Files.readAllLines(copy).forEach(line->sendMsg(line, channel));
         } else {
-            sendMsg("file not found", channel);
+            channel.write(ByteBuffer.wrap("Wrong command. Use cat fileName or ls\r\n".getBytes(StandardCharsets.UTF_8)));
         }
     }
 
-    @SneakyThrows
-    private void sendMsg(String msg, SocketChannel channel) {
-        channel.write(ByteBuffer.wrap(("[" + LocalDateTime.now() + "]" + msg + "\r\n").getBytes(StandardCharsets.UTF_8)));
+    private String getFileDataAsString(String fileName) throws IOException {
+        if (Files.isDirectory(ROOT.resolve(fileName))) {
+            return "[ERROR] Command Cat cannot be applied to " + fileName + "\r\n";
+        } else {
+            return new String(Files.readAllBytes(ROOT.resolve(fileName))) + "\r\n";
+        }
     }
 
+    private String getFilesInfo() throws Exception {
+        return Files.list(ROOT)
+                .map(this::resolveFileType)
+                .collect(Collectors.joining("\r\n")) + "\r\n";
+    }
+
+    private String resolveFileType(Path path) {
+        if (Files.isDirectory(path)) {
+            return String.format("%s\t%s", path.getFileName().toString(), "[DIR]");
+        } else {
+            return String.format("%s\t%s", path.getFileName().toString(), "[FILE]");
+        }
+    }
 
     private void handleAccept(SelectionKey key) throws IOException {
         SocketChannel channel = serverChannel.accept();
