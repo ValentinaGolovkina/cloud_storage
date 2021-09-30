@@ -23,6 +23,12 @@ public class FileMessageHandler extends SimpleChannelInboundHandler<Command> {
     }
 
     @Override
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        ctx.writeAndFlush(new ListResponse(currentPath));
+        ctx.writeAndFlush(new PathResponse(currentPath.toString()));
+    }
+
+    @Override
     protected void channelRead0(ChannelHandlerContext ctx, Command command) throws Exception {
         log.debug("received: {}", command.getType());
         switch (command.getType()) {
@@ -36,11 +42,24 @@ public class FileMessageHandler extends SimpleChannelInboundHandler<Command> {
                 Files.write(currentPath.resolve(message.getName()), message.getBytes());
                 ctx.writeAndFlush(new ListResponse(currentPath));
                 break;
-            case PATH_REQUEST:
-                ctx.writeAndFlush(new PathResponse(currentPath.toString()));
-                break;
             case LIST_REQUEST:
                 ctx.writeAndFlush(new ListResponse(currentPath));
+                break;
+            case PATH_UP_REQUEST:
+                if (currentPath.getParent() != null) {
+                    currentPath = currentPath.getParent();
+                }
+                ctx.writeAndFlush(new PathResponse(currentPath.toString()));
+                ctx.writeAndFlush(new ListResponse(currentPath));
+                break;
+            case PATH_IN_REQUEST:
+                PathInRequest request = (PathInRequest) command;
+                Path newPath = currentPath.resolve(request.getDir());
+                if (Files.isDirectory(newPath)) {
+                    currentPath = newPath;
+                    ctx.writeAndFlush(new PathResponse(currentPath.toString()));
+                    ctx.writeAndFlush(new ListResponse(currentPath));
+                }
                 break;
         }
     }

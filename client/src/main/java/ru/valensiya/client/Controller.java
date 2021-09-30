@@ -19,40 +19,30 @@ import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
-import ru.valensiya.core.Command;
-import ru.valensiya.core.FileMessage;
-import ru.valensiya.core.ListResponse;
-import ru.valensiya.core.PathResponse;
+import ru.valensiya.core.*;
 
 @Slf4j
 public class Controller implements Initializable {
 
-    private Path ROOT_DIR = Paths.get("client/root");
-    private static byte[] buffer = new byte[1024];
-    public ListView<String> listView;
-    public TextField input;
+    public ListView<String> clientView;
+    public ListView<String> serverView;
+    public TextField clientPath;
+    public TextField serverPath;
+    private Path currentDir;
     private ObjectDecoderInputStream is;
     private ObjectEncoderOutputStream os;
-
-    public void send(ActionEvent actionEvent) throws Exception {
-        String fileName = input.getText();
-        input.clear();
-        sendFile(fileName);
-    }
-
-    private void sendFile(String fileName) throws IOException {
-        Path file = ROOT_DIR.resolve(fileName);
-        os.writeObject(new FileMessage(file));
-        os.flush();
-    }
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            fillFilesInCurrentDir();
+            currentDir = Paths.get("client", "root");
             Socket socket = new Socket("localhost", 8189);
             os = new ObjectEncoderOutputStream(socket.getOutputStream());
             is = new ObjectDecoderInputStream(socket.getInputStream());
+
+            refreshClientView();
+            addNavigationListeners();
+
             Thread daemon = new Thread(() -> {
                 try {
                     while (true) {
@@ -62,17 +52,17 @@ public class Controller implements Initializable {
                             case LIST_RESPONSE:
                                 ListResponse response = (ListResponse) command;
                                 List<String> names = response.getNames();
-                                log.debug(names.toString());
+                                refreshServerView(names);
                                 break;
                             case PATH_RESPONSE:
                                 PathResponse pathResponse = (PathResponse) command;
                                 String path = pathResponse.getPath();
-                                log.debug(path);
+                                Platform.runLater(() -> serverPath.setText(path));
                                 break;
                             case FILE_MESSAGE:
                                 FileMessage message = (FileMessage) command;
-                                Files.write(ROOT_DIR.resolve(message.getName()), message.getBytes());
-                                fillFilesInCurrentDir();
+                                Files.write(currentDir.resolve(message.getName()), message.getBytes());
+                                refreshClientView();
                                 break;
                         }
                     }
@@ -87,17 +77,73 @@ public class Controller implements Initializable {
         }
     }
 
-    private void fillFilesInCurrentDir() throws IOException {
-        listView.getItems().clear();
-        listView.getItems().addAll(
-                Files.list(ROOT_DIR)
-                        .map(p -> p.getFileName().toString())
-                        .collect(Collectors.toList())
-        );
-        listView.setOnMouseClicked(e -> {
+    private void refreshClientView() throws IOException {
+        clientPath.setText(currentDir.toString());
+        List<String> names = Files.list(currentDir)
+                .map(p -> p.getFileName().toString())
+                .collect(Collectors.toList());
+        Platform.runLater(() -> {
+            clientView.getItems().clear();
+            clientView.getItems().addAll(names);
+        });
+    }
+
+    private void refreshServerView(List<String> names) {
+        Platform.runLater(() -> {
+            serverView.getItems().clear();
+            serverView.getItems().addAll(names);
+        });
+    }
+
+    public void upload(ActionEvent actionEvent) throws IOException {
+        String fileName = clientView.getSelectionModel().getSelectedItem();
+        FileMessage message = new FileMessage(currentDir.resolve(fileName));
+        os.writeObject(message);
+        os.flush();
+    }
+
+    public void downLoad(ActionEvent actionEvent) throws IOException {
+        String fileName = serverView.getSelectionModel().getSelectedItem();
+        os.writeObject(new FileRequest(fileName));
+        os.flush();
+    }
+
+    public void clientPathUp(ActionEvent actionEvent) throws IOException {
+        currentDir = currentDir.getParent();
+        clientPath.setText(currentDir.toString());
+        refreshClientView();
+    }
+
+    public void serverPathUp(ActionEvent actionEvent) throws IOException {
+        os.writeObject(new PathUpRequest());
+        os.flush();
+    }
+
+    private void addNavigationListeners() {
+        clientView.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
-                String item = listView.getSelectionModel().getSelectedItem();
-                input.setText(item);
+                String item = clientView.getSelectionModel().getSelectedItem();
+                Path newPath = currentDir.resolve(item);
+                if (Files.isDirectory(newPath)) {
+                    currentDir = newPath;
+                    try {
+                        refreshClientView();
+                    } catch (IOException ioException) {
+                        ioException.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        serverView.setOnMouseClicked(e -> {
+            if (e.getClickCount() == 2) {
+                String item = serverView.getSelectionModel().getSelectedItem();
+                try {
+                    os.writeObject(new PathInRequest(item));
+                    os.flush();
+                } catch (IOException ioException) {
+                    ioException.printStackTrace();
+                }
             }
         });
     }
