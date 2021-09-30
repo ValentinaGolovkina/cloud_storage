@@ -1,4 +1,4 @@
-package ru.valensiya.nio;
+package ru.valensiya.client;
 
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;

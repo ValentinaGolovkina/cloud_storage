@@ -11,6 +11,7 @@
     <modules>
         <module>client</module>
         <module>server</module>
+        <module>core</module>
     </modules>
 
     <properties>
@@ -38,5 +39,10 @@
             <version>1.18.16</version>
         </dependency>
 
+        <dependency>
+            <groupId>io.netty</groupId>
+            <artifactId>netty-all</artifactId>
+            <version>4.1.68.Final</version>
+        </dependency>
     </dependencies>
 </project>

@@ -1,4 +1,4 @@
-package ru.valensiya.nio;
+package ru.valensiya.client;
 
 import java.nio.ByteBuffer;
 
