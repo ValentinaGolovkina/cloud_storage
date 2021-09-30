@@ -15,16 +15,19 @@ import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.ResourceBundle;
 import java.util.stream.Collectors;
 
 import ru.valensiya.core.Command;
 import ru.valensiya.core.FileMessage;
+import ru.valensiya.core.ListResponse;
+import ru.valensiya.core.PathResponse;
 
 @Slf4j
 public class Controller implements Initializable {
 
-    private static String ROOT_DIR = "client/root";
+    private Path ROOT_DIR = Paths.get("client/root");
     private static byte[] buffer = new byte[1024];
     public ListView<String> listView;
     public TextField input;
@@ -38,7 +41,7 @@ public class Controller implements Initializable {
     }
 
     private void sendFile(String fileName) throws IOException {
-        Path file = Paths.get(ROOT_DIR, fileName);
+        Path file = ROOT_DIR.resolve(fileName);
         os.writeObject(new FileMessage(file));
         os.flush();
     }
@@ -53,19 +56,25 @@ public class Controller implements Initializable {
             Thread daemon = new Thread(() -> {
                 try {
                     while (true) {
-                        Command msg = (Command) is.readObject();
-                        log.debug("received: {}", msg);
-                        switch (msg.getType()) {
-                            case LIST_REQUEST:
+                        Command command = (Command) is.readObject();
+                        log.debug("received: {}", command);
+                        switch (command.getType()) {
                             case LIST_RESPONSE:
-                            case FILE_MESSAGE:
-                            case FILE_REQUEST:
-                            case PATH_REQUEST:
+                                ListResponse response = (ListResponse) command;
+                                List<String> names = response.getNames();
+                                log.debug(names.toString());
+                                break;
                             case PATH_RESPONSE:
-
-
+                                PathResponse pathResponse = (PathResponse) command;
+                                String path = pathResponse.getPath();
+                                log.debug(path);
+                                break;
+                            case FILE_MESSAGE:
+                                FileMessage message = (FileMessage) command;
+                                Files.write(ROOT_DIR.resolve(message.getName()), message.getBytes());
+                                fillFilesInCurrentDir();
+                                break;
                         }
-                        //Platform.runLater(() -> input.setText(msg));
                     }
                 } catch (Exception e) {
                     log.error("exception while read from input stream");
@@ -81,7 +90,7 @@ public class Controller implements Initializable {
     private void fillFilesInCurrentDir() throws IOException {
         listView.getItems().clear();
         listView.getItems().addAll(
-                Files.list(Paths.get(ROOT_DIR))
+                Files.list(ROOT_DIR)
                         .map(p -> p.getFileName().toString())
                         .collect(Collectors.toList())
         );
