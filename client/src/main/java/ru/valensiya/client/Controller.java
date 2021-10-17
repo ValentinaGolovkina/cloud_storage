@@ -35,7 +35,9 @@ public class Controller implements Initializable {
     @Override
     public void initialize(URL location, ResourceBundle resources) {
         try {
-            currentDir = Paths.get("client", "root");
+            String userDir = System.getProperty("user.name");
+            currentDir = Paths.get("C:/Users", userDir).toAbsolutePath();
+            log.info("Current user: {}", System.getProperty("user.name"));
             Socket socket = new Socket("localhost", 8189);
             os = new ObjectEncoderOutputStream(socket.getOutputStream());
             is = new ObjectDecoderInputStream(socket.getInputStream());

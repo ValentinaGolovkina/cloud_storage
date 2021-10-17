@@ -4,10 +4,8 @@
 <?import javafx.scene.layout.*?>
 
 <?import javafx.scene.text.Font?>
-<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0"
-            prefWidth="600.0" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.valensiya.client.Controller">
+<!--<AnchorPane fx:id="pane"  xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.valensiya.client.Controller">
     <ListView fx:id="clientView" layoutX="14.0" layoutY="38.0" prefHeight="346.0" prefWidth="261.0" />
-    <ListView fx:id="serverView" layoutX="325.0" layoutY="38.0" prefHeight="346.0" prefWidth="261.0"/>
     <Button onAction="#upload" layoutX="277.0" layoutY="38.0" prefHeight="155.0" text="&gt;">
         <font>
             <Font size="24.0"/>
@@ -19,7 +17,35 @@
         </font>
     </Button>
     <TextField fx:id="clientPath" editable="false" layoutX="14.0" layoutY="11.0" prefHeight="13.0" prefWidth="234.0"/>
-    <TextField fx:id="serverPath" editable="false" layoutX="325.0" layoutY="11.0" prefHeight="13.0" prefWidth="234.0"/>
     <Button onAction="#clientPathUp" layoutX="248.0" layoutY="11.0"  text="UP"></Button>
-    <Button onAction="#serverPathUp" layoutX="559.0" layoutY="11.0"  text="UP"/>
-</AnchorPane>
+
+    <TextField fx:id="serverPath" editable="false" layoutX="325.0" layoutY="11.0" prefHeight="13.0" prefWidth="234.0"  AnchorPane.rightAnchor="45"/>
+    <Button onAction="#serverPathUp" layoutX="559.0" layoutY="11.0"  text="UP" AnchorPane.rightAnchor="10" />
+    <ListView fx:id="serverView" layoutX="325.0" layoutY="38.0" prefHeight="346.0" prefWidth="261.0"  AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10"/>
+</AnchorPane>-->
+<GridPane fx:id="pane" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.valensiya.client.Controller" hgap="5" vgap="4">
+    <columnConstraints>
+        <ColumnConstraints hgrow="ALWAYS"/>
+        <ColumnConstraints prefWidth="30" hgrow="NEVER" />
+        <ColumnConstraints prefWidth="100" hgrow="NEVER" />
+        <ColumnConstraints hgrow="ALWAYS"/>
+        <ColumnConstraints prefWidth="30" hgrow="NEVER" />
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints prefHeight="45" vgrow="NEVER" />
+        <RowConstraints prefHeight="45" vgrow="NEVER" />
+        <RowConstraints prefHeight="45" vgrow="NEVER" />
+        <RowConstraints vgrow="ALWAYS"/>
+    </rowConstraints>
+    <TextField GridPane.rowIndex="0"  GridPane.columnIndex="0" fx:id="clientPath" editable="false" />
+    <Button    GridPane.rowIndex="0"  GridPane.columnIndex="1" onAction="#clientPathUp" text="UP"></Button>
+    <ListView  GridPane.rowIndex="1"  GridPane.columnIndex="0" GridPane.rowSpan="3" GridPane.columnSpan="2"  fx:id="clientView" />
+
+    <Button GridPane.rowIndex="1" GridPane.columnIndex="2" onAction="#upload" text="Отправить &gt;"></Button>
+    <Button GridPane.rowIndex="2" GridPane.columnIndex="2" onAction="#downLoad"  text=" &lt; Скачать   "></Button>
+
+
+    <TextField GridPane.rowIndex="0" GridPane.columnIndex="3" fx:id="serverPath" editable="false" />
+    <Button    GridPane.rowIndex="0" GridPane.columnIndex="4" onAction="#serverPathUp"  text="UP"/>
+    <ListView  GridPane.rowIndex="1" GridPane.columnIndex="3" GridPane.rowSpan="3"  GridPane.columnSpan="2" fx:id="serverView" />
+</GridPane>

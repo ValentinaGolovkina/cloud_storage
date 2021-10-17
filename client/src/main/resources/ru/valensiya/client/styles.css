@@ -1,0 +1,32 @@
+.button {
+    -fx-color: #bc9861;
+    -fx-font-size: 13;
+}
+#pane {
+    -fx-background-color: #000000;
+}
+.text-field {
+    -fx-background-color: #f0f3b7;
+}
+.list-view {
+    -fx-color: #110a15;
+    /*-fx-border-color: #fcff4e;*/
+    -fx-font-color: #ffffff;
+}
+.list-cell {
+    -fx-background-color: #242323;
+    /*-fx-font-color: #ffffff;*/
+    -fx-font-size: 15;
+    -fx-font-weight: 25;
+    -fx-text-fill: #bbbcaf;
+}
+
+.list-cell:even { /* четные ячейки*/
+    /* -fx-background-color: #221b22;*/
+    -fx-font-color: #ffffff;
+}
+
+.list-cell:filled:hover { /*Наведение на ячейку */
+    -fx-background-color: #ccf3bd;
+    -fx-text-fill: #000000;
+}
