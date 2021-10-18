@@ -8,7 +8,24 @@ import java.util.stream.Collectors;
 
 public class ListResponse extends Command{
 
-    private final List<String> names;
+    private final List<Item> items;
+
+    public ListResponse(Path path) throws IOException {
+        items = Files.list(path)
+                .map(p -> p.getFileName().toString())
+                .map(name->{
+                    if (Files.isDirectory(path.resolve(name))) {
+                        return new Item(name,"folder.png");
+                    } else {
+                        return new Item(name,"file.png");
+                    }}).collect(Collectors.toList());
+    }
+
+    public List<Item> getItems() {
+        return items;
+    }
+
+    /*private final List<String> names;
 
     public ListResponse(Path path) throws IOException {
         names = Files.list(path)
@@ -18,7 +35,7 @@ public class ListResponse extends Command{
 
     public List<String> getNames() {
         return names;
-    }
+    }*/
 
     @Override
     public CommandType getType() {

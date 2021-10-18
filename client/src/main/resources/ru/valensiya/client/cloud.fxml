@@ -23,6 +23,8 @@
     <Button onAction="#serverPathUp" layoutX="559.0" layoutY="11.0"  text="UP" AnchorPane.rightAnchor="10" />
     <ListView fx:id="serverView" layoutX="325.0" layoutY="38.0" prefHeight="346.0" prefWidth="261.0"  AnchorPane.leftAnchor="10" AnchorPane.rightAnchor="10"/>
 </AnchorPane>-->
+<?import javafx.scene.image.ImageView?>
+<?import javafx.scene.image.Image?>
 <GridPane fx:id="pane" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.valensiya.client.Controller" hgap="5" vgap="4">
     <columnConstraints>
         <ColumnConstraints hgrow="ALWAYS"/>
@@ -38,7 +40,8 @@
         <RowConstraints vgrow="ALWAYS"/>
     </rowConstraints>
     <TextField GridPane.rowIndex="0"  GridPane.columnIndex="0" fx:id="clientPath" editable="false" />
-    <Button    GridPane.rowIndex="0"  GridPane.columnIndex="1" onAction="#clientPathUp" text="UP"></Button>
+    <Button    GridPane.rowIndex="0"  GridPane.columnIndex="1" onAction="#clientPathUp" text="   " styleClass="buttonUP">
+    </Button>
     <ListView  GridPane.rowIndex="1"  GridPane.columnIndex="0" GridPane.rowSpan="3" GridPane.columnSpan="2"  fx:id="clientView" />
 
     <Button GridPane.rowIndex="1" GridPane.columnIndex="2" onAction="#upload" text="Отправить &gt;"></Button>
@@ -46,6 +49,6 @@
 
 
     <TextField GridPane.rowIndex="0" GridPane.columnIndex="3" fx:id="serverPath" editable="false" />
-    <Button    GridPane.rowIndex="0" GridPane.columnIndex="4" onAction="#serverPathUp"  text="UP"/>
+    <Button    GridPane.rowIndex="0" GridPane.columnIndex="4" onAction="#serverPathUp"  text="   " styleClass="buttonUP"  />
     <ListView  GridPane.rowIndex="1" GridPane.columnIndex="3" GridPane.rowSpan="3"  GridPane.columnSpan="2" fx:id="serverView" />
 </GridPane>

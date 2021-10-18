@@ -2,6 +2,18 @@
     -fx-color: #bc9861;
     -fx-font-size: 13;
 }
+
+.image-view {
+    -fx-fit-to-height: 20;
+    -fx-fit-to-width: 20;
+}
+
+.buttonUP {
+    -fx-background-image: url('up.png');
+    -fx-background-size: 40px;
+    -fx-background-repeat: no-repeat;
+    -fx-background-position: 50%;
+}
 #pane {
     -fx-background-color: #000000;
 }
@@ -10,23 +22,45 @@
 }
 .list-view {
     -fx-color: #110a15;
+    -fx-background-color: #242323;
     /*-fx-border-color: #fcff4e;*/
-    -fx-font-color: #ffffff;
+    -fx-font-color: #bb3c3c;
 }
 .list-cell {
     -fx-background-color: #242323;
     /*-fx-font-color: #ffffff;*/
     -fx-font-size: 15;
-    -fx-font-weight: 25;
+    /*-fx-font-weight: 20;*/
     -fx-text-fill: #bbbcaf;
 }
 
 .list-cell:even { /* четные ячейки*/
     /* -fx-background-color: #221b22;*/
-    -fx-font-color: #ffffff;
+    -fx-font-color: #db6262;
 }
 
 .list-cell:filled:hover { /*Наведение на ячейку */
     -fx-background-color: #ccf3bd;
     -fx-text-fill: #000000;
+}
+
+.list-cell:filled:selected { /*Выделение ячейки */
+    -fx-background-color: #c7e809;
+    -fx-text-fill: #000000;
+}
+
+#login #password {
+    -fx-background-color: #000000;
+    -fx-text-fill: #000000;
+}
+
+.label {
+    -fx-text-fill: #f0f3b7;
+}
+
+#loginButton {
+    -fx-min-width: 200;
+}
+#loginButton:hover{
+    -fx-color: #f1c985;
 }
