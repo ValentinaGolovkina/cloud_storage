@@ -16,7 +16,7 @@ public class FileMessageHandler extends SimpleChannelInboundHandler<Command> {
     private static Path currentPath;
 
     public FileMessageHandler() throws IOException {
-        currentPath = Paths.get("server", "root");
+        currentPath = Paths.get("server", "cloud");
         if (!Files.exists(currentPath)) {
             Files.createDirectory(currentPath);
         }

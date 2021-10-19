@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<GridPane fx:id="pane" xmlns="http://javafx.com/javafx/11.0.1" xmlns:fx="http://javafx.com/fxml/1" fx:controller="ru.valensiya.client.LoginController" hgap="5" vgap="4">
+    <columnConstraints>
+        <ColumnConstraints hgrow="ALWAYS"/>
+        <ColumnConstraints prefWidth="200" hgrow="NEVER" />
+        <ColumnConstraints hgrow="ALWAYS"/>
+    </columnConstraints>
+    <rowConstraints>
+        <RowConstraints vgrow="ALWAYS"/>
+        <RowConstraints prefHeight="15" vgrow="NEVER" />
+        <RowConstraints prefHeight="35" vgrow="NEVER" />
+        <RowConstraints prefHeight="15" vgrow="NEVER" />
+        <RowConstraints prefHeight="35" vgrow="NEVER" />
+        <RowConstraints prefHeight="50" vgrow="NEVER" />
+        <RowConstraints vgrow="ALWAYS"/>
+    </rowConstraints>
+    <Label GridPane.rowIndex="1"  GridPane.columnIndex="1">Login</Label>
+    <TextField GridPane.rowIndex="2"  GridPane.columnIndex="1" fx:id="login" editable="true" />
+    <Label GridPane.rowIndex="3"  GridPane.columnIndex="1">Password</Label>
+    <PasswordField GridPane.rowIndex="4"  GridPane.columnIndex="1" fx:id="password" editable="true" />
+    <Button    GridPane.rowIndex="5"  GridPane.columnIndex="1" fx:id="loginButton" onAction="#login" text="Войти" ></Button>
+</GridPane>

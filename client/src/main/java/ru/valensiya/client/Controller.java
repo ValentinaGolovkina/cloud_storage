@@ -7,6 +7,8 @@ import javafx.event.ActionEvent;
 import javafx.fxml.Initializable;
 import javafx.scene.control.ListView;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ListCell;
+import javafx.scene.image.ImageView;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
@@ -24,8 +26,8 @@ import ru.valensiya.core.*;
 @Slf4j
 public class Controller implements Initializable {
 
-    public ListView<String> clientView;
-    public ListView<String> serverView;
+    public ListView<Item> clientView;
+    public ListView<Item> serverView;
     public TextField clientPath;
     public TextField serverPath;
     private Path currentDir;
@@ -34,8 +36,11 @@ public class Controller implements Initializable {
 
     @Override
     public void initialize(URL location, ResourceBundle resources) {
+        clientPath.setFocusTraversable(false);
         try {
-            currentDir = Paths.get("client", "root");
+            String userDir = System.getProperty("user.name");
+            currentDir = Paths.get("C:/Users", userDir).toAbsolutePath();
+            log.info("Current user: {}", System.getProperty("user.name"));
             Socket socket = new Socket("localhost", 8189);
             os = new ObjectEncoderOutputStream(socket.getOutputStream());
             is = new ObjectDecoderInputStream(socket.getInputStream());
@@ -51,8 +56,8 @@ public class Controller implements Initializable {
                         switch (command.getType()) {
                             case LIST_RESPONSE:
                                 ListResponse response = (ListResponse) command;
-                                List<String> names = response.getNames();
-                                refreshServerView(names);
+                                List<Item> items = response.getItems();
+                                refreshServerView(items);
                                 break;
                             case PATH_RESPONSE:
                                 PathResponse pathResponse = (PathResponse) command;
@@ -79,39 +84,79 @@ public class Controller implements Initializable {
 
     private void refreshClientView() throws IOException {
         clientPath.setText(currentDir.toString());
-        List<String> names = Files.list(currentDir)
+        List<Item> items = Files.list(currentDir)
                 .map(p -> p.getFileName().toString())
-                .collect(Collectors.toList());
+                .map(name->{
+                    if (Files.isDirectory(currentDir.resolve(name))) {
+                        return new Item(name,"folder.png");
+                    } else {
+                        return new Item(name,"file.png");
+                    }}).collect(Collectors.toList());
         Platform.runLater(() -> {
             clientView.getItems().clear();
-            clientView.getItems().addAll(names);
+            clientView.getItems().addAll(items);
+            //Отображение иконок
+            clientView.setCellFactory(l-> new ListCell<Item>() {
+                @Override
+                public void updateItem(Item item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty) {
+                        setText("");
+                        setGraphic(null);
+                    } else {
+                        setText(item.getName());
+                        ImageView image =new ImageView(getClass().getResource(item.getImage()).toExternalForm());
+                        image.setFitHeight(20);
+                        image.setFitWidth(20);
+                        setGraphic(image);
+                    }
+                }
+            });
         });
     }
 
-    private void refreshServerView(List<String> names) {
+    private void refreshServerView(List<Item> items) {
         Platform.runLater(() -> {
             serverView.getItems().clear();
-            serverView.getItems().addAll(names);
+            serverView.getItems().addAll(items);
+            serverView.setCellFactory(l-> new ListCell<Item>() {
+                @Override
+                public void updateItem(Item item, boolean empty) {
+                    super.updateItem(item, empty);
+                    if (empty) {
+                        setText("");
+                        setGraphic(null);
+                    } else {
+                        setText(item.getName());
+                        ImageView image =new ImageView(getClass().getResource(item.getImage()).toExternalForm());
+                        image.setFitHeight(20);
+                        image.setFitWidth(20);
+                        setGraphic(image);
+                    }
+                }
+            });
         });
     }
 
     public void upload(ActionEvent actionEvent) throws IOException {
-        String fileName = clientView.getSelectionModel().getSelectedItem();
+        String fileName = clientView.getSelectionModel().getSelectedItem().getName();
         FileMessage message = new FileMessage(currentDir.resolve(fileName));
         os.writeObject(message);
         os.flush();
     }
 
     public void downLoad(ActionEvent actionEvent) throws IOException {
-        String fileName = serverView.getSelectionModel().getSelectedItem();
+        String fileName = serverView.getSelectionModel().getSelectedItem().getName();
         os.writeObject(new FileRequest(fileName));
         os.flush();
     }
 
     public void clientPathUp(ActionEvent actionEvent) throws IOException {
-        currentDir = currentDir.getParent();
-        clientPath.setText(currentDir.toString());
-        refreshClientView();
+        if (currentDir.getParent()!=null) {
+            currentDir = currentDir.getParent();
+            clientPath.setText(currentDir.toString());
+            refreshClientView();
+        }
     }
 
     public void serverPathUp(ActionEvent actionEvent) throws IOException {
@@ -122,7 +167,7 @@ public class Controller implements Initializable {
     private void addNavigationListeners() {
         clientView.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
-                String item = clientView.getSelectionModel().getSelectedItem();
+                String item = clientView.getSelectionModel().getSelectedItem().getName();
                 Path newPath = currentDir.resolve(item);
                 if (Files.isDirectory(newPath)) {
                     currentDir = newPath;
@@ -137,7 +182,7 @@ public class Controller implements Initializable {
 
         serverView.setOnMouseClicked(e -> {
             if (e.getClickCount() == 2) {
-                String item = serverView.getSelectionModel().getSelectedItem();
+                String item = serverView.getSelectionModel().getSelectedItem().getName();
                 try {
                     os.writeObject(new PathInRequest(item));
                     os.flush();
